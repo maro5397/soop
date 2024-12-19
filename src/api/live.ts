@@ -123,19 +123,25 @@ export class SoopLive {
     }
 
     async detail(streamerId: string, options: LiveDetailOptions = DEFAULT_REQUEST_BODY_FOR_LIVE_STATUS): Promise<LiveDetail> {
+        const body = {
+            bid: streamerId,
+            ...(options || {})
+        }
+        const params = new URLSearchParams(
+            Object.entries(body).reduce((acc, [key, value]) => {
+                acc[key] = String(value);
+                return acc;
+            }, {} as Record<string, string>)
+        );
         return this.client.fetch(`?bjid=${streamerId}`, {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    bid: streamerId,
-                    ...(options || {})
-                })
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: params.toString()
             })
-            .then(r => r.json())
-            .then(data => {
-                const result = data['result']
-                if (result === 0) return null
-                return data
+            .then(r => {
+                return r.json()
             })
     }
 }
