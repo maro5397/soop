@@ -104,6 +104,17 @@ export interface LiveDetailOptions {
     is_revive: boolean
 }
 
+export const DEFAULT_REQUEST_BODY_FOR_LIVE_STATUS = {
+    'type': 'live',
+    'pwd': '',
+    'player_type': 'html5',
+    'stream_type': 'common',
+    'quality': 'HD',
+    'mode': 'landing',
+    'from_api': '0',
+    'is_revive': false
+}
+
 export class SoopLive {
     private client: SoopClient
 
@@ -111,7 +122,7 @@ export class SoopLive {
         this.client = client
     }
 
-    async detail(streamerId: string, options: LiveDetailOptions): Promise<LiveDetail> {
+    async detail(streamerId: string, options: LiveDetailOptions = DEFAULT_REQUEST_BODY_FOR_LIVE_STATUS): Promise<LiveDetail> {
         return this.client.fetch(`?bjid=${streamerId}`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
