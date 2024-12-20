@@ -4,7 +4,6 @@ import {SoopClient} from "../client"
 export interface SoopChatOptions {
     streamerId: string
     baseUrls?: SoopAPIBaseUrls
-    pollInterval?: number
 }
 
 export interface SoopChatOptionsWithClient extends SoopChatOptions {
