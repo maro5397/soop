@@ -77,9 +77,9 @@ import { SoopClient } from "./src"
     })
 
     // 퇴장 정보
-    // soopChat.on('exit', response => {
-    //     console.log(`\n[${response.receivedTime}] ${response.username}(${response.userId})이/가 퇴장하셨습니다\n`)
-    // })
+    soopChat.on('exit', response => {
+        console.log(`\n[${response.receivedTime}] ${response.username}(${response.userId})이/가 퇴장하셨습니다\n`)
+    })
 
     // 입장 정보
     soopChat.on('viewer', response => {
@@ -101,9 +101,9 @@ import { SoopClient } from "./src"
     })
 
     // 패킷을 바이너리 형태로 확인
-    // soopChat.on('raw', packet => {
-    //     console.log(packet)
-    // })
+    soopChat.on('raw', packet => {
+        console.log(packet)
+    })
 
     // 채팅 연결
     await soopChat.connect()
