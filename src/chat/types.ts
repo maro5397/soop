@@ -2,7 +2,7 @@ import {SoopAPIBaseUrls} from "../types"
 import {SoopClient} from "../client"
 
 export interface SoopChatOptions {
-    steamerId: string
+    streamerId: string
     baseUrls?: SoopAPIBaseUrls
     pollInterval?: number
 }

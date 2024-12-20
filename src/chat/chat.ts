@@ -28,7 +28,7 @@ export class SoopChat {
             throw new Error('Already connected')
         }
 
-        this.liveDetail = await this.client.live.detail(this.options.steamerId)
+        this.liveDetail = await this.client.live.detail(this.options.streamerId)
         this.chatUrl = this.makeChatUrl(this.liveDetail)
 
         this.ws = new WebSocket(
@@ -55,7 +55,7 @@ export class SoopChat {
             return
         }
         const receivedTime = new Date().toISOString();
-        this.emit('disconnect', {streamerId: this.options.steamerId, receivedTime: receivedTime})
+        this.emit('disconnect', {streamerId: this.options.streamerId, receivedTime: receivedTime})
         this.stopPingInterval()
         this.ws?.close()
         this.ws = null
@@ -86,13 +86,13 @@ export class SoopChat {
         switch (messageType) {
             case ChatType.CONNECT:
                 this._connected = true
-                this.emit('connect', {streamerId: this.options.steamerId, receivedTime: receivedTime})
+                this.emit('connect', {streamerId: this.options.streamerId, receivedTime: receivedTime})
                 const JOIN_PACKET = `${ChatDelimiter.STARTER}0002${this.calculateByteSize(this.liveDetail.CHANNEL.CHATNO).toString().padStart(6, '0')}00${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}${ChatDelimiter.SEPARATOR.repeat(5)}`;
                 this.ws.send(JOIN_PACKET);
                 break
 
             case ChatType.ENTERCHATROOM:
-                this.emit('enterChatRoom', {streamerId: this.options.steamerId, receivedTime: receivedTime})
+                this.emit('enterChatRoom', {streamerId: this.options.streamerId, receivedTime: receivedTime})
                 break
 
             case ChatType.NOTIFICATION:
@@ -240,7 +240,7 @@ export class SoopChat {
     }
 
     private makeChatUrl(detail: LiveDetail): string {
-        return `wss://${detail.CHANNEL.CHDOMAIN.toLowerCase()}:${Number(detail.CHANNEL.CHPT) + 1}/Websocket/${this.options.steamerId}`
+        return `wss://${detail.CHANNEL.CHDOMAIN.toLowerCase()}:${Number(detail.CHANNEL.CHPT) + 1}/Websocket/${this.options.streamerId}`
     }
 
     private calculateByteSize(input: string): number {

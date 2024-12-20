@@ -9,7 +9,7 @@ import { SoopClient } from "./src"
     console.log(data)
 
     const soopChat = client.chat({
-        steamerId: streamerId
+        streamerId: streamerId
     })
 
     // 연결 성공
