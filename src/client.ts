@@ -1,8 +1,9 @@
 import {SoopLive} from "./api"
-import {SoopChatFunc, SoopClientOptions} from "./types"
+import {SoopChatFunc, SoopClientOptions, SoopLiveStatusFunc} from "./types"
 import {DEFAULT_BASE_URLS, DEFAULT_USER_AGENT} from "./const"
 import { SoopChatOptions } from "./chat/types"
 import { SoopChat } from "./chat"
+import {SoopLiveStatus, SoopLiveStatusOptions} from "./live-status"
 
 export class SoopClient {
     readonly options: SoopClientOptions
@@ -20,7 +21,16 @@ export class SoopClient {
             return new SoopChat({
                 client: this,
                 baseUrls: this.options.baseUrls,
-                pollInterval: 30 * 1000,
+                ...options
+            })
+        }
+    }
+
+    get liveStatus(): SoopLiveStatusFunc {
+        return (options: SoopLiveStatusOptions) => {
+            return new SoopLiveStatus({
+                client: this,
+                baseUrls: this.options.baseUrls,
                 ...options
             })
         }
