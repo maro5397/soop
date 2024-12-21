@@ -142,8 +142,8 @@ export class SoopLive {
                 },
                 body: params.toString()
             })
-            .then(r => {
-                return r.json()
+            .then(response => {
+                return response.json()
             })
     }
 }
