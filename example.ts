@@ -1,7 +1,7 @@
 import { SoopClient } from "./src"
 
 (async function () {
-    const streamerId = "jingburger1"
+    const streamerId = "cotton1217"
     const client = new SoopClient();
 
     // 라이브 세부정보
