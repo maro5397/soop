@@ -1,20 +1,38 @@
 {
-  "name": "soop",
-  "version": "1.0.0",
-  "description": "라이브 스트리밍 서비스 숲(soop)의 비공식 API 라이브러리",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@types/ws": "^8.5.13",
-    "typescript": "^5.7.2"
-  },
-  "dependencies": {
-    "ws": "^8.18.0"
-  }
+    "name": "soop",
+    "version": "0.0.1",
+    "license": "MIT",
+    "description": "라이브 스트리밍 서비스 숲(soop)의 비공식 API 라이브러리",
+    "keywords": [
+        "soop"
+    ],
+    "author": {
+        "name": "reindeer002",
+        "email": "lsj000424@gmail.com",
+        "url": "https://github.com/maro5397"
+    },
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "test": "ts-node example.ts",
+        "lint": "eslint"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/maro5397/soop.git"
+    },
+    "bugs": {
+        "url": "https://github.com/maro5397/soop/issues",
+        "email": "lsj000424@gmail.com"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.2",
+        "@types/ws": "^8.5.13",
+        "typescript": "^5.7.2"
+    },
+    "dependencies": {
+        "eslint": "^9.17.0",
+        "ws": "^8.18.0"
+    }
 }
