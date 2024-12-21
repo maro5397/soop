@@ -142,8 +142,9 @@ export class SoopLive {
                 },
                 body: params.toString()
             })
-            .then(response => {
-                return response.json()
+            .then(response => response.json())
+            .then(data => {
+                return { CHANNEL: data["CHANNEL"] }
             })
     }
 }
