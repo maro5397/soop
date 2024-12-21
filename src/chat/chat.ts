@@ -29,6 +29,9 @@ export class SoopChat {
         }
 
         this.liveDetail = await this.client.live.detail(this.options.streamerId)
+        if (this.liveDetail.CHANNEL.RESULT === 0) {
+            throw new Error("Not streaming now")
+        }
         this.chatUrl = this.makeChatUrl(this.liveDetail)
 
         this.ws = new WebSocket(
