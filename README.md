@@ -16,7 +16,7 @@
 > Node 20.17.0 버전에서 개발되었습니다.
 
 ```bash
-npm install @reindeer002/soop
+npm install soop-extension
 ```
 
 ## 예시
