@@ -135,7 +135,7 @@ export class SoopLive {
                 return acc;
             }, {} as Record<string, string>)
         );
-        return this.client.fetch(`?bjid=${streamerId}`, {
+        return this.client.fetch(`/afreeca/player_live_api.php?bjid=${streamerId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
