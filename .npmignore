@@ -1,0 +1,10 @@
+node_modules
+src
+.*
+example.ts
+package-lock.json
+tsconfig.json
+
+test.ts
+docs
+images
