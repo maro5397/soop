@@ -32,8 +32,8 @@ export class SoopClient {
         }
 
         if ((pathOrUrl.startsWith("/") || pathOrUrl.startsWith("?"))
-             && !pathOrUrl.startsWith(this.options.baseUrls.soopPlayerBaseUrl)) {
-            pathOrUrl = `${this.options.baseUrls.soopPlayerBaseUrl}${pathOrUrl}`
+             && !pathOrUrl.startsWith(this.options.baseUrls.soopLiveBaseUrl)) {
+            pathOrUrl = `${this.options.baseUrls.soopLiveBaseUrl}${pathOrUrl}`
         }
 
         return fetch(pathOrUrl, {
