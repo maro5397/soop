@@ -1,12 +1,16 @@
 import { SoopClient } from "./src"
 
 (async function () {
-    const streamerId = "cotton1217"
+    const streamerId = "jingburger1"
     const client = new SoopClient();
 
     // 라이브 세부정보
-    const data = await client.live.detail(streamerId);
-    console.log(data)
+    const liveDetail = await client.live.detail(streamerId);
+    console.log(liveDetail)
+
+    // 채널 정보
+    const stationInfo = await client.channel.station(streamerId);
+    console.log(stationInfo)
 
     const soopChat = client.chat({
         streamerId: streamerId
