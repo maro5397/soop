@@ -1,5 +1,12 @@
 # soop
 
+[![npm version](https://img.shields.io/npm/v/soop-extension.svg?style=for-the-badge)](https://www.npmjs.com/package/soop-extension)
+[![npm downloads](https://img.shields.io/npm/dm/soop-extension.svg?style=for-the-badge)](http://npm-stat.com/charts.html?package=soop-extension)
+[![license](https://img.shields.io/github/license/maro5397/soop?style=for-the-badge)](https://github.com/maro5397/soop/blob/main/LICENSE)
+
+![createAt](https://img.shields.io/github/created-at/maro5397/soop?style=for-the-badge)
+![language](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+
 라이브 스트리밍 서비스 숲(soop)의 비공식 API 라이브러리
 
 라이브 스트리밍 서비스 SOOP의 비공식 API 라이브러리입니다.
