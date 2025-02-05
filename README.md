@@ -14,7 +14,10 @@
 현재 구현된 기능은 다음과 같습니다.
 
 - 방송 상태 및 상세 정보 조회
-- 채팅
+- 로그인 (세션/쿠키 조회)
+- 채팅 송/수신
+    - 채팅 송/수신 기능 사용 시 각별한 주의가 필요함
+    - **_악의적 목적으로 사용할 시 책임을 지지 않음을 밝힘_**
 
 ## 설치
 
@@ -25,9 +28,13 @@ npm install soop-extension
 ```
 
 ## 예시
-
+### 실행 예시
+```bash
+ts-node example.ts
+```
+### 코드 예시
 ```ts
-const streamerId = "cotton1217"
+const streamerId = process.env.STREAMER_ID
 const client = new SoopClient();
 
 // 라이브 세부정보
@@ -38,18 +45,31 @@ console.log(liveDetail)
 const stationInfo = await client.channel.station(streamerId);
 console.log(stationInfo)
 
+// 로그인 (쿠키 반환)
+// 아래와 같이 숲 ID, PASSWORD 문자열 입력 가능 (그대로 VCS 업로드 시 공개된 공간에 노출될 수 있음)
+// const cookie = await client.auth.signIn("USERID", "PASSWORD");
+const cookie = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
+console.log(cookie)
+
 const soopChat = client.chat({
-    streamerId: streamerId
+    streamerId: streamerId,
+    cookie: cookie // sendChat 기능을 사용하고 싶을 경우 세팅
 })
 
 // 연결 성공
 soopChat.on('connect', response => {
-    console.log(`[${response.receivedTime}] Connected to ${response.streamerId}`)
+    if(response.username) {
+        console.log(`[${response.receivedTime}] ${response.username} is connected to ${response.streamerId}`)
+    } else {
+        console.log(`[${response.receivedTime}] Connected to ${response.streamerId}`)
+    }
+    console.log(`[${response.receivedTime}] SYN packet: ${response.syn}`)
 })
 
 // 채팅방 입장
 soopChat.on('enterChatRoom', response => {
     console.log(`[${response.receivedTime}] Enter to ${response.streamerId}'s chat room`)
+    console.log(`[${response.receivedTime}] SYN/ACK packet: ${response.synAck}`)
 })
 
 // 채팅방 공지
@@ -135,6 +155,21 @@ soopChat.on('raw', packet => {
     console.log(packet)
 })
 
+// 본인이 송신한 채팅
+soopChat.on('chat', response => {
+    if( response.userId === process.env.USERID ) {
+        console.log(`[${response.receivedTime}] ${response.username}(${response.userId}): ${response.comment}`)
+    }
+})
+
 // 채팅 연결
 await soopChat.connect()
+
+// 채팅 송신
+// 바로 채팅 송신 시 채팅방 연결까지 대기 후 송신
+// 연속으로 채팅 송신 시 벤 및 송신 실패할 수 있으므로 송신 전 대기 시간 설정 필요
+await soopChat.sendChat("ㅋㅋㅋㅋ");
+setInterval(async () => {
+    await soopChat.sendChat("ㅋㅋㅋㅋ");
+}, 5000)
 ```
