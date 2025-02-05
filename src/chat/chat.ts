@@ -1,10 +1,10 @@
-import WebSocket, { MessageEvent } from "ws"
-import { DEFAULT_BASE_URLS } from "../const"
-import { SoopClient } from "../client"
+import WebSocket, {MessageEvent} from "ws"
+import {DEFAULT_BASE_URLS} from "../const"
+import {SoopClient} from "../client"
 import {ChatDelimiter, ChatType, Events, SoopChatOptions, SoopChatOptionsWithClient} from "./types"
-import { LiveDetail } from "../api"
-import { SecureContextOptions, createSecureContext } from "tls";
-import { Agent } from "https";
+import {LiveDetail} from "../api"
+import {createSecureContext, SecureContextOptions} from "tls"
+import {Agent} from "https"
 
 export class SoopChat {
     private readonly client: SoopClient
@@ -22,15 +22,16 @@ export class SoopChat {
     }
 
     private _connected: boolean = false
+    private _entered: boolean = false
 
     async connect() {
         if (this._connected) {
-            throw new Error('Already connected')
+            this.errorHandling('Already connected')
         }
 
         this.liveDetail = await this.client.live.detail(this.options.streamerId)
         if (this.liveDetail.CHANNEL.RESULT === 0) {
-            throw new Error("Not streaming now")
+            throw this.errorHandling("Not Streaming now")
         }
         this.chatUrl = this.makeChatUrl(this.liveDetail)
 
@@ -41,7 +42,7 @@ export class SoopChat {
         )
 
         this.ws.onopen = () => {
-            const CONNECT_PACKET = `${ChatDelimiter.STARTER}000100000600${ChatDelimiter.SEPARATOR.repeat(3)}16${ChatDelimiter.SEPARATOR}`;
+            const CONNECT_PACKET = this.getConnectPacket();
             this.ws.send(CONNECT_PACKET)
         }
 
@@ -65,18 +66,30 @@ export class SoopChat {
         this._connected = false
     }
 
-    emit(event: string, data: any) {
+    public async sendChat(message: string): Promise<boolean> {
+        if (!this.options.cookie) {
+            this.errorHandling("No Cookie");
+            return false;
+        }
+        if (!this.ws) return false;
+        if (!this._entered) await this.waitForEnter();
+        const packet = `${ChatDelimiter.SEPARATOR.repeat(1)}${message}${ChatDelimiter.SEPARATOR.repeat(1)}0${ChatDelimiter.SEPARATOR.repeat(1)}`
+        this.ws.send(`${ChatDelimiter.STARTER}${ChatType.CHAT}${this.getPayloadLength(packet)}00${packet}`);
+        return true;
+    }
+
+    public on<T extends keyof Events>(event: T, handler: (data: Events[T]) => void) {
+        const e = event as string
+        this.handlers[e] = this.handlers[e] || []
+        this.handlers[e].push(handler)
+    }
+
+    public emit(event: string, data: any) {
         if (this.handlers[event]) {
             for (const handler of this.handlers[event]) {
                 handler(data)
             }
         }
-    }
-
-    on<T extends keyof Events>(event: T, handler: (data: Events[T]) => void) {
-        const e = event as string
-        this.handlers[e] = this.handlers[e] || []
-        this.handlers[e].push(handler)
     }
 
     private async handleMessage(data: MessageEvent) {
@@ -89,13 +102,20 @@ export class SoopChat {
         switch (messageType) {
             case ChatType.CONNECT:
                 this._connected = true
-                this.emit('connect', {streamerId: this.options.streamerId, receivedTime: receivedTime})
-                const JOIN_PACKET = `${ChatDelimiter.STARTER}0002${this.calculateByteSize(this.liveDetail.CHANNEL.CHATNO).toString().padStart(6, '0')}00${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}${ChatDelimiter.SEPARATOR.repeat(5)}`;
+                const connect = this.parseConnect(packet)
+                this.emit('connect', {...connect, streamerId: this.options.streamerId, receivedTime: receivedTime})
+                const JOIN_PACKET = this.getPacket(ChatType.ENTERCHATROOM, `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}${ChatDelimiter.SEPARATOR.repeat(5)}`);
                 this.ws.send(JOIN_PACKET);
                 break
 
             case ChatType.ENTERCHATROOM:
-                this.emit('enterChatRoom', {streamerId: this.options.streamerId, receivedTime: receivedTime})
+                const enterChatRoom = this.parseEnterChatRoom(packet);
+                this.emit('enterChatRoom', {...enterChatRoom, receivedTime: receivedTime})
+                if(this.options.cookie) {
+                    const ENTER_INFO_PACKET = this.getPacket(ChatType.ENTER_INFO, `${ChatDelimiter.SEPARATOR}${enterChatRoom.synAck}${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`)
+                    this.ws.send(ENTER_INFO_PACKET);
+                }
+                this._entered = true
                 break
 
             case ChatType.NOTIFICATION:
@@ -135,7 +155,7 @@ export class SoopChat {
 
             case ChatType.SUBSCRIBE:
                 const subscribe = this.parseSubscribe(packet)
-                this.emit('viewer', {...subscribe, receivedTime: receivedTime})
+                this.emit('subscribe', {...subscribe, receivedTime: receivedTime})
                 break
 
             case ChatType.EXIT:
@@ -152,6 +172,18 @@ export class SoopChat {
                 this.emit('unknown', parts)
                 break;
         }
+    }
+
+    private parseConnect(packet: string) {
+        const parts = packet.split(ChatDelimiter.SEPARATOR);
+        const [, username, syn] = parts
+        return {username: username, syn: syn}
+    }
+
+    private parseEnterChatRoom(packet: string) {
+        const parts = packet.split(ChatDelimiter.SEPARATOR);
+        const [, , streamerId, , , , , synAck] = parts
+        return {streamerId: streamerId, synAck: synAck}
     }
 
     private parseSubscribe(packet: string) {
@@ -214,12 +246,12 @@ export class SoopChat {
 
     private parseMessageType(packet: string): string {
         if(!packet.startsWith(ChatDelimiter.STARTER)) {
-            throw new Error("Invalid data: does not start with STARTER byte");
+            throw this.errorHandling("Invalid data: does not start with STARTER byte");
         }
         if (packet.length >= 5) {
             return packet.substring(2, 6);
         }
-        throw new Error("Invalid data: does not have any data for opcode");
+        throw this.errorHandling("Invalid data: does not have any data for opcode");
     }
 
     private startPingInterval() {
@@ -239,15 +271,20 @@ export class SoopChat {
 
     private sendPing() {
         if (!this.ws) return;
-        this.ws.send(`${ChatDelimiter.STARTER}000000000100${ChatDelimiter.SEPARATOR}`);
+        const packet = this.getPacket(ChatType.PING, ChatDelimiter.SEPARATOR);
+        this.ws.send(packet);
     }
 
     private makeChatUrl(detail: LiveDetail): string {
         return `wss://${detail.CHANNEL.CHDOMAIN.toLowerCase()}:${Number(detail.CHANNEL.CHPT) + 1}/Websocket/${this.options.streamerId}`
     }
 
-    private calculateByteSize(input: string): number {
-        return Buffer.byteLength(input, 'utf-8') + 6;
+    private getByteSize(input: string): number {
+        return Buffer.byteLength(input, 'utf-8');
+    }
+
+    private getPayloadLength(packet: string): string {
+        return this.getByteSize(packet).toString().padStart(6, '0');
     }
 
     private createAgent(): Agent {
@@ -261,5 +298,39 @@ export class SoopChat {
 
     private getViewerElements<T>(array: T[]): T[] {
         return array.filter((_, index) => index % 2 === 1);
+    }
+
+    private getConnectPacket(): string {
+        let payload = `${ChatDelimiter.SEPARATOR.repeat(3)}16${ChatDelimiter.SEPARATOR}`;
+        if(this.options.cookie) {
+            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.options.cookie}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
+        }
+        return this.getPacket(ChatType.CONNECT, payload);
+    }
+
+    private getPacket(chatType: ChatType, payload: string): string {
+        const packetHeader = `${ChatDelimiter.STARTER}${chatType}${this.getPayloadLength(payload)}00`;
+        return packetHeader + payload;
+    }
+
+    private waitForEnter(): Promise<void> {
+        return new Promise((resolve) => {
+            if (this._entered) {
+                resolve();
+                return;
+            }
+            const checkInterval = setInterval(() => {
+                if (this._entered) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 500);
+        });
+    }
+
+    private errorHandling(message: string): Error {
+        const error = new Error(message);
+        console.error(error);
+        return error;
     }
 }
