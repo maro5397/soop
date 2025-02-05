@@ -3,6 +3,7 @@ import {SoopChat, SoopChatOptions} from "./chat"
 export interface SoopAPIBaseUrls {
     soopLiveBaseUrl?: string
     soopChannelBaseUrl?: string
+    soopAuthBaseUrl?: string
 }
 
 export interface SoopClientOptions {
