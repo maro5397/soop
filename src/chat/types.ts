@@ -3,6 +3,7 @@ import {SoopClient} from "../client"
 
 export interface SoopChatOptions {
     streamerId: string
+    cookie?: string
     baseUrls?: SoopAPIBaseUrls
 }
 
@@ -22,6 +23,7 @@ export enum ChatType {
     EXIT = "0004",
     CHAT = "0005",
     DISCONNECT = "0007",
+    ENTER_INFO = "0012",
     TEXTDONATION = "0018",
     ADBALLOONDONATION = "0087",
     SUBSCRIBE = "0093",
@@ -30,7 +32,6 @@ export enum ChatType {
     VIDEODONATION = "0105",
     VIEWER = "0127",
     // UNKNOWN = "0009",
-    // UNKNOWN = "0012",
     // UNKNOWN = "0054",
     // UNKNOWN = "0088",
     // UNKNOWN = "0094",
@@ -58,10 +59,13 @@ export interface Response {
 }
 
 export interface ConnectResponse extends Response{
+    syn: string
+    username: string
     streamerId: string
 }
 
 export interface EnterChatRoomResponse extends Response{
+    synAck: string
     streamerId: string
 }
 
