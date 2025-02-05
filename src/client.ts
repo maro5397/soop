@@ -1,14 +1,15 @@
-import {SoopLive} from "./api"
+import {SoopAuth, SoopLive} from "./api"
 import {SoopChatFunc, SoopClientOptions} from "./types"
 import {DEFAULT_BASE_URLS, DEFAULT_USER_AGENT} from "./const"
-import { SoopChatOptions } from "./chat/types"
+import { SoopChatOptions } from "./chat"
 import { SoopChat } from "./chat"
-import {SoopChannel} from "./api/channel"
+import {SoopChannel} from "./api"
 
 export class SoopClient {
     readonly options: SoopClientOptions
     live = new SoopLive(this)
     channel = new SoopChannel(this)
+    auth = new SoopAuth(this)
 
     constructor(options: SoopClientOptions = {}) {
         options.baseUrls = options.baseUrls || DEFAULT_BASE_URLS
