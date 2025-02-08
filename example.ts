@@ -6,7 +6,7 @@ import { SoopClient } from "./src"
 
     // 라이브 세부정보
     const liveDetail = await client.live.detail(streamerId);
-    console.log(liveDetail.CHANNEL.VIEWPRESET)
+    console.log(liveDetail)
 
     // 채널 정보
     const stationInfo = await client.channel.station(streamerId);
