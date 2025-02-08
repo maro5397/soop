@@ -1,9 +1,9 @@
 import {SoopClient} from "../client"
 import {DEFAULT_BASE_URLS} from "../const"
 
-interface Auth {
-    RESULT: number,
-    notChangePwd: number
+export interface Auth {
+    uuid: string,
+    cookie: string
 }
 
 export class SoopAuth {
@@ -17,7 +17,7 @@ export class SoopAuth {
         userId: string,
         password: string,
         baseUrl: string = DEFAULT_BASE_URLS.soopAuthBaseUrl
-    ): Promise<string> {
+    ): Promise<Auth> {
         const formData = new FormData();
         formData.append("szWork", "login");
         formData.append("szType", "json");
@@ -31,8 +31,9 @@ export class SoopAuth {
             .then(response => {
                 const setCookieHeader = response.headers.get('set-cookie');
                 const authTicketMatch = setCookieHeader?.match(/AuthTicket=([^;]+)/);
-                if (authTicketMatch) {
-                    return authTicketMatch[1];
+                const uuid = setCookieHeader?.match(/_au=([^;]+)/);
+                if (authTicketMatch && uuid) {
+                    return { uuid: uuid[1], cookie: authTicketMatch[1] };
                 } else {
                     return null;
                 }

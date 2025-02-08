@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
         "lib": [
-            "ES2016",
+            "ESNext",
         ],
         "outDir": "./dist/",
-        "target": "ES2016",
+        "target": "ESNext",
         "esModuleInterop": true,
         "declaration": true,
         "module": "CommonJS",
