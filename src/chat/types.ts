@@ -1,9 +1,9 @@
-import {SoopAPIBaseUrls} from "../types"
+import {SoopAPIBaseUrls, SoopLoginOptions} from "../types"
 import {SoopClient} from "../client"
 
 export interface SoopChatOptions {
     streamerId: string
-    cookie?: string
+    login?: SoopLoginOptions
     baseUrls?: SoopAPIBaseUrls
 }
 
@@ -14,6 +14,9 @@ export interface SoopChatOptionsWithClient extends SoopChatOptions {
 export enum ChatDelimiter {
     STARTER = "\x1b\t",
     SEPARATOR = "\x0c",
+    ELEMENT_START = "\x11",
+    ELEMENT_END = "\x12",
+    SPACE = "\x06"
 }
 
 export enum ChatType {
