@@ -2,7 +2,7 @@ import WebSocket, {MessageEvent} from "ws"
 import {DEFAULT_BASE_URLS} from "../const"
 import {SoopClient} from "../client"
 import {ChatDelimiter, ChatType, Events, SoopChatOptions, SoopChatOptionsWithClient} from "./types"
-import {LiveDetail} from "../api"
+import {Auth, LiveDetail} from "../api"
 import {createSecureContext, SecureContextOptions} from "tls"
 import {Agent} from "https"
 
@@ -11,6 +11,7 @@ export class SoopChat {
     private ws: WebSocket
     private chatUrl: string
     private liveDetail: LiveDetail
+    private auth: Auth
     private options: SoopChatOptions
     private handlers: [string, (data: any) => void][] = []
     private pingIntervalId = null
@@ -27,6 +28,10 @@ export class SoopChat {
     async connect() {
         if (this._connected) {
             this.errorHandling('Already connected')
+        }
+
+        if(this.options.login) {
+            this.auth = await this.client.auth.signIn(this.options.login.userId, this.options.login.password);
         }
 
         this.liveDetail = await this.client.live.detail(this.options.streamerId)
@@ -67,7 +72,7 @@ export class SoopChat {
     }
 
     public async sendChat(message: string): Promise<boolean> {
-        if (!this.options.cookie) {
+        if (!this.auth.cookie) {
             this.errorHandling("No Cookie");
             return false;
         }
@@ -104,15 +109,15 @@ export class SoopChat {
                 this._connected = true
                 const connect = this.parseConnect(packet)
                 this.emit('connect', {...connect, streamerId: this.options.streamerId, receivedTime: receivedTime})
-                const JOIN_PACKET = this.getPacket(ChatType.ENTERCHATROOM, `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}${ChatDelimiter.SEPARATOR.repeat(5)}`);
+                const JOIN_PACKET = this.getJoinPacket();
                 this.ws.send(JOIN_PACKET);
                 break
 
             case ChatType.ENTERCHATROOM:
                 const enterChatRoom = this.parseEnterChatRoom(packet);
                 this.emit('enterChatRoom', {...enterChatRoom, receivedTime: receivedTime})
-                if(this.options.cookie) {
-                    const ENTER_INFO_PACKET = this.getPacket(ChatType.ENTER_INFO, `${ChatDelimiter.SEPARATOR}${enterChatRoom.synAck}${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`)
+                if(this.auth.cookie) {
+                    const ENTER_INFO_PACKET = this.getEnterInfoPacket(enterChatRoom.synAck);
                     this.ws.send(ENTER_INFO_PACKET);
                 }
                 this._entered = true
@@ -302,10 +307,42 @@ export class SoopChat {
 
     private getConnectPacket(): string {
         let payload = `${ChatDelimiter.SEPARATOR.repeat(3)}16${ChatDelimiter.SEPARATOR}`;
-        if(this.options.cookie) {
-            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.options.cookie}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
+        if(this.auth.cookie) {
+            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.auth.cookie}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
         }
         return this.getPacket(ChatType.CONNECT, payload);
+    }
+
+    private getJoinPacket(): string {
+        let payload = `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}`;
+        payload += `${ChatDelimiter.SEPARATOR}`; // `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`;
+        payload += `${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`
+        const log = {
+            // set_bps: this.liveDetail.CHANNEL.BPS,
+            // view_bps: this.liveDetail.CHANNEL.VIEWPRESET[0].bps,
+            // quality: 'normal',
+            uuid: this.auth.uuid,
+            geo_cc: this.liveDetail.CHANNEL.geo_cc,
+            geo_rc: this.liveDetail.CHANNEL.geo_rc,
+            acpt_lang: this.liveDetail.CHANNEL.acpt_lang,
+            svc_lang: this.liveDetail.CHANNEL.svc_lang,
+            // subscribe: 0,
+            // lowlatency: 0,
+            // mode: "landing"
+        }
+        const query = this.objectToQueryString(log)
+        payload += `log${ChatDelimiter.ELEMENT_START}${query}${ChatDelimiter.ELEMENT_END}`
+        // payload += `pwd${ChatDelimiter.ELEMENT_START}${ChatDelimiter.ELEMENT_END}`
+        // payload += `auth_info${ChatDelimiter.ELEMENT_START}NULL${ChatDelimiter.ELEMENT_END}`
+        // payload += `pver${ChatDelimiter.ELEMENT_START}2${ChatDelimiter.ELEMENT_END}`
+        // payload += `access_system${ChatDelimiter.ELEMENT_START}html5${ChatDelimiter.ELEMENT_END}`
+        payload += `${ChatDelimiter.SEPARATOR}`
+        return this.getPacket(ChatType.ENTERCHATROOM, payload);
+    }
+
+    private getEnterInfoPacket(synAck: string): string {
+        const payload = `${ChatDelimiter.SEPARATOR}${synAck}${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`
+        return this.getPacket(ChatType.ENTER_INFO, payload);
     }
 
     private getPacket(chatType: ChatType, payload: string): string {
@@ -332,5 +369,11 @@ export class SoopChat {
         const error = new Error(message);
         console.error(error);
         return error;
+    }
+
+    private objectToQueryString(obj: Record<string, any>): string {
+        return Object.entries(obj)
+            .map(([key, value]) => `${ChatDelimiter.SPACE}&${ChatDelimiter.SPACE}${key}${ChatDelimiter.SPACE}=${ChatDelimiter.SPACE}${value}`)
+            .join("");
     }
 }
