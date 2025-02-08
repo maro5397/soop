@@ -11,6 +11,11 @@ export interface SoopClientOptions {
     userAgent?: string
 }
 
+export interface SoopLoginOptions {
+    userId?: string,
+    password?: string
+}
+
 export type SoopChatFunc = {
     (options: SoopChatOptions): SoopChat
 }
