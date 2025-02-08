@@ -3,9 +3,8 @@
 [![npm version](https://img.shields.io/npm/v/soop-extension.svg?style=for-the-badge)](https://www.npmjs.com/package/soop-extension)
 [![npm downloads](https://img.shields.io/npm/dm/soop-extension.svg?style=for-the-badge)](http://npm-stat.com/charts.html?package=soop-extension)
 [![license](https://img.shields.io/github/license/maro5397/soop?style=for-the-badge)](https://github.com/maro5397/soop/blob/main/LICENSE)
-
-![createAt](https://img.shields.io/github/created-at/maro5397/soop?style=for-the-badge)
 ![language](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![createAt](https://img.shields.io/github/created-at/maro5397/soop?style=for-the-badge)
 
 라이브 스트리밍 서비스 숲(soop)의 비공식 API 라이브러리
 
@@ -48,12 +47,13 @@ console.log(stationInfo)
 // 로그인 (쿠키 반환)
 // 아래와 같이 숲 ID, PASSWORD 문자열 입력 가능 (그대로 VCS 업로드 시 공개된 공간에 노출될 수 있음)
 // const cookie = await client.auth.signIn("USERID", "PASSWORD");
-const cookie = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
+const { cookie, uuid } = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
 console.log(cookie)
+console.log(uuid)
 
 const soopChat = client.chat({
     streamerId: streamerId,
-    cookie: cookie // sendChat 기능을 사용하고 싶을 경우 세팅
+    login: { userId: process.env.USERID, password: process.env.PASSWORD } // sendChat 기능을 사용하고 싶을 경우 세팅
 })
 
 // 연결 성공
@@ -168,8 +168,8 @@ await soopChat.connect()
 // 채팅 송신
 // 바로 채팅 송신 시 채팅방 연결까지 대기 후 송신
 // 연속으로 채팅 송신 시 벤 및 송신 실패할 수 있으므로 송신 전 대기 시간 설정 필요
-await soopChat.sendChat("ㅋㅋㅋㅋ");
+await soopChat.sendChat("오오");
 setInterval(async () => {
-    await soopChat.sendChat("ㅋㅋㅋㅋ");
+    await soopChat.sendChat("신기하다");
 }, 5000)
 ```
