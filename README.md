@@ -157,7 +157,7 @@ soopChat.on('raw', packet => {
 
 // 본인이 송신한 채팅
 soopChat.on('chat', response => {
-    if( response.userId === process.env.USERID ) {
+    if( response.userId.includes(process.env.USERID) ) {
         console.log(`[${response.receivedTime}] ${response.username}(${response.userId}): ${response.comment}`)
     }
 })
