@@ -11,7 +11,7 @@ export class SoopChat {
     private ws: WebSocket
     private chatUrl: string
     private liveDetail: LiveDetail
-    private auth: Auth
+    private auth: Auth = { cookie: null, uuid: null }
     private options: SoopChatOptions
     private handlers: [string, (data: any) => void][] = []
     private pingIntervalId = null
