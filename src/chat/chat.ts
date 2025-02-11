@@ -34,10 +34,6 @@ export class SoopChat {
             this.cookie = await this.client.auth.signIn(this.options.login.userId, this.options.login.password);
         }
 
-        if (!this.cookie) {
-            this.errorHandling('Failed to fetch live detail information.')
-        }
-
         this.liveDetail = await this.client.live.detail(this.options.streamerId, this.cookie)
         if (this.liveDetail.CHANNEL.RESULT === 0) {
             throw this.errorHandling("Not Streaming now")
@@ -76,7 +72,7 @@ export class SoopChat {
     }
 
     public async sendChat(message: string): Promise<boolean> {
-        if (!this.cookie.AuthTicket) {
+        if (!this.cookie?.AuthTicket) {
             this.errorHandling("No Auth");
             return false;
         }
@@ -120,7 +116,7 @@ export class SoopChat {
             case ChatType.ENTERCHATROOM:
                 const enterChatRoom = this.parseEnterChatRoom(packet);
                 this.emit('enterChatRoom', {...enterChatRoom, receivedTime: receivedTime})
-                if(this.cookie.AuthTicket) {
+                if(this.cookie?.AuthTicket) {
                     const ENTER_INFO_PACKET = this.getEnterInfoPacket(enterChatRoom.synAck);
                     this.ws.send(ENTER_INFO_PACKET);
                 }
@@ -311,8 +307,8 @@ export class SoopChat {
 
     private getConnectPacket(): string {
         let payload = `${ChatDelimiter.SEPARATOR.repeat(3)}16${ChatDelimiter.SEPARATOR}`;
-        if(this.cookie.AuthTicket) {
-            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.cookie.AuthTicket}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
+        if(this.cookie?.AuthTicket) {
+            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.cookie?.AuthTicket}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
         }
         return this.getPacket(ChatType.CONNECT, payload);
     }

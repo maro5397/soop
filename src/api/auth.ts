@@ -48,7 +48,7 @@ export class SoopAuth {
             const regex = new RegExp(`${name}=([^;]+)`)
             const match = setCookieHeader.match(regex)
             if (!match) {
-                throw new Error(`Cookie "${name}" not found in set-cookie header`)
+                return null
             }
             return match[1]
         }
