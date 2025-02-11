@@ -11,8 +11,13 @@ import { SoopClient } from "./src"
     const cookie  = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
     console.log(cookie)
 
-    const liveDetail = await client.live.detail(streamerId, cookie);
-    console.log(liveDetail);
+    // 라이브 세부정보 (로그인 후)
+    const liveDetailWithCookie = await client.live.detail(streamerId, cookie);
+    console.log(liveDetailWithCookie);
+
+    // 라이브 세부정보
+    const liveDetailWithoutCookie = await client.live.detail(streamerId);
+    console.log(liveDetailWithoutCookie);
 
     // 채널 정보
     const stationInfo = await client.channel.station(streamerId);
