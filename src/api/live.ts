@@ -1,5 +1,6 @@
 import {SoopClient} from "../client"
 import {DEFAULT_BASE_URLS} from "../const"
+import {Cookie} from "./auth"
 
 export interface LiveDetail {
     CHANNEL: {
@@ -127,6 +128,7 @@ export class SoopLive {
 
     async detail(
         streamerId: string,
+        cookie: Cookie,
         options: LiveDetailOptions = DEFAULT_REQUEST_BODY_FOR_LIVE_STATUS,
         baseUrl: string = DEFAULT_BASE_URLS.soopLiveBaseUrl
     ): Promise<LiveDetail> {
@@ -136,20 +138,27 @@ export class SoopLive {
         }
         const params = new URLSearchParams(
             Object.entries(body).reduce((acc, [key, value]) => {
-                acc[key] = String(value);
-                return acc;
+                acc[key] = String(value)
+                return acc
             }, {} as Record<string, string>)
-        );
+        )
         return this.client.fetch(`${baseUrl}/afreeca/player_live_api.php?bjid=${streamerId}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: params.toString()
-            })
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Cookie": this.buildCookieString(cookie)
+            },
+            body: params.toString()
+        })
             .then(response => response.json())
             .then(data => {
-                return { CHANNEL: data["CHANNEL"] }
+                return {CHANNEL: data["CHANNEL"]}
             })
+    }
+
+    private buildCookieString(data: Cookie): string {
+        return Object.entries(data)
+            .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+            .join("; ")
     }
 }
