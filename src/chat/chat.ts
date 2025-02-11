@@ -77,7 +77,7 @@ export class SoopChat {
 
     public async sendChat(message: string): Promise<boolean> {
         if (!this.cookie.AuthTicket) {
-            this.errorHandling("No Cookie");
+            this.errorHandling("No Auth");
             return false;
         }
         if (!this.ws) return false;

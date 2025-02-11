@@ -1,7 +1,7 @@
 import { SoopClient } from "./src"
 
 (async function () {
-    const streamerId = 'killgusdnk'
+    const streamerId = process.env.STREAMER_ID
     const client = new SoopClient();
 
     // 라이브 세부정보

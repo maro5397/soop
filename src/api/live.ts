@@ -1,6 +1,6 @@
 import {SoopClient} from "../client"
 import {DEFAULT_BASE_URLS} from "../const"
-import {Cookie} from "./cookie"
+import {Cookie} from "./auth"
 
 export interface LiveDetail {
     CHANNEL: {
