@@ -5,19 +5,23 @@ import { SoopClient } from "./src"
     const client = new SoopClient();
 
     // 라이브 세부정보
-    const liveDetail = await client.live.detail(streamerId);
-    console.log(liveDetail)
+    // 로그인 (쿠키 반환)
+    // 아래와 같이 숲 ID, PASSWORD 문자열 입력 가능 (그대로 VCS 업로드 시 공개된 공간에 노출될 수 있음)
+    // const cookie = await client.auth.signIn("USERID", "PASSWORD");
+    const cookie  = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
+    console.log(cookie)
+
+    // 라이브 세부정보 (로그인 후)
+    const liveDetailWithCookie = await client.live.detail(streamerId, cookie);
+    console.log(liveDetailWithCookie);
+
+    // 라이브 세부정보
+    const liveDetailWithoutCookie = await client.live.detail(streamerId);
+    console.log(liveDetailWithoutCookie);
 
     // 채널 정보
     const stationInfo = await client.channel.station(streamerId);
     console.log(stationInfo)
-
-    // 로그인 (쿠키 반환)
-    // 아래와 같이 숲 ID, PASSWORD 문자열 입력 가능 (그대로 VCS 업로드 시 공개된 공간에 노출될 수 있음)
-    // const cookie = await client.auth.signIn("USERID", "PASSWORD");
-    const { cookie, uuid } = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
-    console.log(cookie)
-    console.log(uuid)
 
     const soopChat = client.chat({
         streamerId: streamerId,
@@ -136,7 +140,7 @@ import { SoopClient } from "./src"
     // 채팅 송신
     // 바로 채팅 송신 시 채팅방 연결까지 대기 후 송신
     // 연속으로 채팅 송신 시 벤 및 송신 실패할 수 있으므로 송신 전 대기 시간 설정 필요
-    await soopChat.sendChat("오오");
+    await soopChat.sendChat("ㅎㅇ");
     setInterval(async () => {
         await soopChat.sendChat("신기하다");
     }, 5000)
