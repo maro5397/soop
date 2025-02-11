@@ -128,7 +128,7 @@ export class SoopLive {
 
     async detail(
         streamerId: string,
-        cookie: Cookie,
+        cookie: Cookie = null,
         options: LiveDetailOptions = DEFAULT_REQUEST_BODY_FOR_LIVE_STATUS,
         baseUrl: string = DEFAULT_BASE_URLS.soopLiveBaseUrl
     ): Promise<LiveDetail> {
@@ -146,7 +146,7 @@ export class SoopLive {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Cookie": this.buildCookieString(cookie)
+                "Cookie": cookie && this.buildCookieString(cookie)
             },
             body: params.toString()
         })

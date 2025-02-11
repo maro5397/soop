@@ -32,13 +32,11 @@ export class SoopChat {
 
         if(this.options.login) {
             this.cookie = await this.client.auth.signIn(this.options.login.userId, this.options.login.password);
+            this.liveDetail = await this.client.live.detail(this.options.streamerId, this.cookie)
+        } else {
+            this.liveDetail = await this.client.live.detail(this.options.streamerId)
         }
 
-        if (!this.cookie) {
-            this.errorHandling('Failed to fetch live detail information.')
-        }
-
-        this.liveDetail = await this.client.live.detail(this.options.streamerId, this.cookie)
         if (this.liveDetail.CHANNEL.RESULT === 0) {
             throw this.errorHandling("Not Streaming now")
         }
@@ -76,7 +74,7 @@ export class SoopChat {
     }
 
     public async sendChat(message: string): Promise<boolean> {
-        if (!this.cookie.AuthTicket) {
+        if (!this.cookie?.AuthTicket) {
             this.errorHandling("No Auth");
             return false;
         }
@@ -120,7 +118,7 @@ export class SoopChat {
             case ChatType.ENTERCHATROOM:
                 const enterChatRoom = this.parseEnterChatRoom(packet);
                 this.emit('enterChatRoom', {...enterChatRoom, receivedTime: receivedTime})
-                if(this.cookie.AuthTicket) {
+                if(this.cookie?.AuthTicket) {
                     const ENTER_INFO_PACKET = this.getEnterInfoPacket(enterChatRoom.synAck);
                     this.ws.send(ENTER_INFO_PACKET);
                 }
@@ -311,8 +309,8 @@ export class SoopChat {
 
     private getConnectPacket(): string {
         let payload = `${ChatDelimiter.SEPARATOR.repeat(3)}16${ChatDelimiter.SEPARATOR}`;
-        if(this.cookie.AuthTicket) {
-            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.cookie.AuthTicket}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
+        if(this.cookie?.AuthTicket) {
+            payload = `${ChatDelimiter.SEPARATOR.repeat(1)}${this.cookie?.AuthTicket}${ChatDelimiter.SEPARATOR.repeat(2)}16${ChatDelimiter.SEPARATOR}`
         }
         return this.getPacket(ChatType.CONNECT, payload);
     }
@@ -320,28 +318,32 @@ export class SoopChat {
     private getJoinPacket(): string {
         let payload = `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}`;
 
-        payload += `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`; // `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`;
-        payload += `${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`
-        const log = {
-            set_bps: this.liveDetail.CHANNEL.BPS,
-            view_bps: this.liveDetail.CHANNEL.VIEWPRESET[0].bps,
-            quality: 'normal',
-            uuid: this.cookie._au,
-            geo_cc: this.liveDetail.CHANNEL.geo_cc,
-            geo_rc: this.liveDetail.CHANNEL.geo_rc,
-            acpt_lang: this.liveDetail.CHANNEL.acpt_lang,
-            svc_lang: this.liveDetail.CHANNEL.svc_lang,
-            subscribe: 0,
-            lowlatency: 0,
-            mode: "landing"
+        if(this.cookie) {
+            payload += `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`;
+            payload += `${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`
+            const log = {
+                set_bps: this.liveDetail.CHANNEL.BPS,
+                view_bps: this.liveDetail.CHANNEL.VIEWPRESET[0].bps,
+                quality: 'normal',
+                uuid: this.cookie._au,
+                geo_cc: this.liveDetail.CHANNEL.geo_cc,
+                geo_rc: this.liveDetail.CHANNEL.geo_rc,
+                acpt_lang: this.liveDetail.CHANNEL.acpt_lang,
+                svc_lang: this.liveDetail.CHANNEL.svc_lang,
+                subscribe: 0,
+                lowlatency: 0,
+                mode: "landing"
+            }
+            const query = this.objectToQueryString(log)
+            payload += `log${ChatDelimiter.ELEMENT_START}${query}${ChatDelimiter.ELEMENT_END}`
+            payload += `pwd${ChatDelimiter.ELEMENT_START}${ChatDelimiter.ELEMENT_END}`
+            payload += `auth_info${ChatDelimiter.ELEMENT_START}NULL${ChatDelimiter.ELEMENT_END}`
+            payload += `pver${ChatDelimiter.ELEMENT_START}2${ChatDelimiter.ELEMENT_END}`
+            payload += `access_system${ChatDelimiter.ELEMENT_START}html5${ChatDelimiter.ELEMENT_END}`
+            payload += `${ChatDelimiter.SEPARATOR}`
+        } else {
+            payload += `${ChatDelimiter.SEPARATOR.repeat(5)}`
         }
-        const query = this.objectToQueryString(log)
-        payload += `log${ChatDelimiter.ELEMENT_START}${query}${ChatDelimiter.ELEMENT_END}`
-        payload += `pwd${ChatDelimiter.ELEMENT_START}${ChatDelimiter.ELEMENT_END}`
-        payload += `auth_info${ChatDelimiter.ELEMENT_START}NULL${ChatDelimiter.ELEMENT_END}`
-        payload += `pver${ChatDelimiter.ELEMENT_START}2${ChatDelimiter.ELEMENT_END}`
-        payload += `access_system${ChatDelimiter.ELEMENT_START}html5${ChatDelimiter.ELEMENT_END}`
-        payload += `${ChatDelimiter.SEPARATOR}`
         return this.getPacket(ChatType.ENTERCHATROOM, payload);
     }
 
