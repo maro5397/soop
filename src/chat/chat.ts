@@ -32,9 +32,11 @@ export class SoopChat {
 
         if(this.options.login) {
             this.cookie = await this.client.auth.signIn(this.options.login.userId, this.options.login.password);
+            this.liveDetail = await this.client.live.detail(this.options.streamerId, this.cookie)
+        } else {
+            this.liveDetail = await this.client.live.detail(this.options.streamerId)
         }
 
-        this.liveDetail = await this.client.live.detail(this.options.streamerId, this.cookie)
         if (this.liveDetail.CHANNEL.RESULT === 0) {
             throw this.errorHandling("Not Streaming now")
         }
@@ -316,28 +318,32 @@ export class SoopChat {
     private getJoinPacket(): string {
         let payload = `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.CHATNO}`;
 
-        payload += `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`; // `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`;
-        payload += `${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`
-        const log = {
-            set_bps: this.liveDetail.CHANNEL.BPS,
-            view_bps: this.liveDetail.CHANNEL.VIEWPRESET[0].bps,
-            quality: 'normal',
-            uuid: this.cookie._au,
-            geo_cc: this.liveDetail.CHANNEL.geo_cc,
-            geo_rc: this.liveDetail.CHANNEL.geo_rc,
-            acpt_lang: this.liveDetail.CHANNEL.acpt_lang,
-            svc_lang: this.liveDetail.CHANNEL.svc_lang,
-            subscribe: 0,
-            lowlatency: 0,
-            mode: "landing"
+        if(this.cookie) {
+            payload += `${ChatDelimiter.SEPARATOR}${this.liveDetail.CHANNEL.FTK}`;
+            payload += `${ChatDelimiter.SEPARATOR}0${ChatDelimiter.SEPARATOR}`
+            const log = {
+                set_bps: this.liveDetail.CHANNEL.BPS,
+                view_bps: this.liveDetail.CHANNEL.VIEWPRESET[0].bps,
+                quality: 'normal',
+                uuid: this.cookie._au,
+                geo_cc: this.liveDetail.CHANNEL.geo_cc,
+                geo_rc: this.liveDetail.CHANNEL.geo_rc,
+                acpt_lang: this.liveDetail.CHANNEL.acpt_lang,
+                svc_lang: this.liveDetail.CHANNEL.svc_lang,
+                subscribe: 0,
+                lowlatency: 0,
+                mode: "landing"
+            }
+            const query = this.objectToQueryString(log)
+            payload += `log${ChatDelimiter.ELEMENT_START}${query}${ChatDelimiter.ELEMENT_END}`
+            payload += `pwd${ChatDelimiter.ELEMENT_START}${ChatDelimiter.ELEMENT_END}`
+            payload += `auth_info${ChatDelimiter.ELEMENT_START}NULL${ChatDelimiter.ELEMENT_END}`
+            payload += `pver${ChatDelimiter.ELEMENT_START}2${ChatDelimiter.ELEMENT_END}`
+            payload += `access_system${ChatDelimiter.ELEMENT_START}html5${ChatDelimiter.ELEMENT_END}`
+            payload += `${ChatDelimiter.SEPARATOR}`
+        } else {
+            payload += `${ChatDelimiter.SEPARATOR.repeat(5)}`
         }
-        const query = this.objectToQueryString(log)
-        payload += `log${ChatDelimiter.ELEMENT_START}${query}${ChatDelimiter.ELEMENT_END}`
-        payload += `pwd${ChatDelimiter.ELEMENT_START}${ChatDelimiter.ELEMENT_END}`
-        payload += `auth_info${ChatDelimiter.ELEMENT_START}NULL${ChatDelimiter.ELEMENT_END}`
-        payload += `pver${ChatDelimiter.ELEMENT_START}2${ChatDelimiter.ELEMENT_END}`
-        payload += `access_system${ChatDelimiter.ELEMENT_START}html5${ChatDelimiter.ELEMENT_END}`
-        payload += `${ChatDelimiter.SEPARATOR}`
         return this.getPacket(ChatType.ENTERCHATROOM, payload);
     }
 
