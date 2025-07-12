@@ -5,6 +5,7 @@ import {ChatDelimiter, ChatType, Events, SoopChatOptions, SoopChatOptionsWithCli
 import {Cookie, LiveDetail} from "../api"
 import {createSecureContext, SecureContextOptions} from "tls"
 import {Agent} from "https"
+import {SoopChatEvent} from "./event"
 
 export class SoopChat {
     private readonly client: SoopClient
@@ -66,7 +67,7 @@ export class SoopChat {
             return
         }
         const receivedTime = new Date().toISOString();
-        this.emit('disconnect', {streamerId: this.options.streamerId, receivedTime: receivedTime})
+        this.emit(SoopChatEvent.DISCONNECT, {streamerId: this.options.streamerId, receivedTime: receivedTime})
         this.stopPingInterval()
         this.ws?.close()
         this.ws = null
@@ -102,7 +103,7 @@ export class SoopChat {
     private async handleMessage(data: MessageEvent) {
         const receivedTime = new Date().toISOString();
         const packet = data.data.toString()
-        this.emit('raw', Buffer.from(packet))
+        this.emit(SoopChatEvent.RAW, Buffer.from(packet))
 
         const messageType = this.parseMessageType(packet)
 
@@ -110,14 +111,14 @@ export class SoopChat {
             case ChatType.CONNECT:
                 this._connected = true
                 const connect = this.parseConnect(packet)
-                this.emit('connect', {...connect, streamerId: this.options.streamerId, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.CONNECT, {...connect, streamerId: this.options.streamerId, receivedTime: receivedTime})
                 const JOIN_PACKET = this.getJoinPacket();
                 this.ws.send(JOIN_PACKET);
                 break
 
-            case ChatType.ENTERCHATROOM:
+            case ChatType.ENTER_CHAT_ROOM:
                 const enterChatRoom = this.parseEnterChatRoom(packet);
-                this.emit('enterChatRoom', {...enterChatRoom, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.ENTER_CHAT_ROOM, {...enterChatRoom, receivedTime: receivedTime})
                 if(this.cookie?.AuthTicket) {
                     const ENTER_INFO_PACKET = this.getEnterInfoPacket(enterChatRoom.synAck);
                     this.ws.send(ENTER_INFO_PACKET);
@@ -127,47 +128,47 @@ export class SoopChat {
 
             case ChatType.NOTIFICATION:
                 const notification = this.parseNotification(packet)
-                this.emit('notification', {...notification, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.NOTIFICATION, {...notification, receivedTime: receivedTime})
                 break
 
             case ChatType.CHAT:
                 const chat = this.parseChat(packet)
-                this.emit('chat', {...chat, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.CHAT, {...chat, receivedTime: receivedTime})
                 break
 
-            case ChatType.VIDEODONATION:
+            case ChatType.VIDEO_DONATION:
                 const videoDonation = this.parseVideoDonation(packet)
-                this.emit('videoDonation', {...videoDonation, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.VIDEO_DONATION, {...videoDonation, receivedTime: receivedTime})
                 break
 
-            case ChatType.TEXTDONATION:
+            case ChatType.TEXT_DONATION:
                 const textDonation = this.parseTextDonation(packet)
-                this.emit('textDonation', {...textDonation, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.TEXT_DONATION, {...textDonation, receivedTime: receivedTime})
                 break
 
-            case ChatType.ADBALLOONDONATION:
+            case ChatType.AD_BALLOON_DONATION:
                 const adBalloonDonation = this.parseAdBalloonDonation(packet)
-                this.emit('adBalloonDonation', {...adBalloonDonation, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.AD_BALLOON_DONATION, {...adBalloonDonation, receivedTime: receivedTime})
                 break
 
             case ChatType.EMOTICON:
                 const emoticon = this.parseEmoticon(packet)
-                this.emit('emoticon', {...emoticon, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.EMOTICON, {...emoticon, receivedTime: receivedTime})
                 break
 
             case ChatType.VIEWER:
                 const viewer = this.parseViewer(packet)
-                this.emit('viewer', {...viewer, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.VIEWER, {...viewer, receivedTime: receivedTime})
                 break
 
             case ChatType.SUBSCRIBE:
                 const subscribe = this.parseSubscribe(packet)
-                this.emit('subscribe', {...subscribe, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.SUBSCRIBE, {...subscribe, receivedTime: receivedTime})
                 break
 
             case ChatType.EXIT:
                 const exit = this.parseExit(packet)
-                this.emit('exit', {...exit, receivedTime: receivedTime})
+                this.emit(SoopChatEvent.EXIT, {...exit, receivedTime: receivedTime})
                 break
 
             case ChatType.DISCONNECT:
@@ -176,7 +177,7 @@ export class SoopChat {
 
             default:
                 const parts = packet.split(ChatDelimiter.SEPARATOR);
-                this.emit('unknown', parts)
+                this.emit(SoopChatEvent.UNKNOWN, parts)
                 break;
         }
     }
@@ -344,7 +345,7 @@ export class SoopChat {
         } else {
             payload += `${ChatDelimiter.SEPARATOR.repeat(5)}`
         }
-        return this.getPacket(ChatType.ENTERCHATROOM, payload);
+        return this.getPacket(ChatType.ENTER_CHAT_ROOM, payload);
     }
 
     private getEnterInfoPacket(synAck: string): string {
