@@ -15,7 +15,6 @@ export interface Cookie {
     isBbs: Number
 }
 
-
 export class SoopAuth {
     private client: SoopClient
 
@@ -53,7 +52,7 @@ export class SoopAuth {
             return match[1]
         }
 
-        const cookie: Cookie = {
+        return {
             AbroadChk: getCookieValue("AbroadChk"),
             AbroadVod: getCookieValue("AbroadVod"),
             AuthTicket: getCookieValue("AuthTicket"),
@@ -66,7 +65,5 @@ export class SoopAuth {
             _ausb: getCookieValue("_ausb"),
             isBbs: Number(getCookieValue("isBbs"))
         }
-
-        return cookie
     }
 }
