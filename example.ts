@@ -4,31 +4,32 @@ import {SoopChatEvent, SoopClient} from "./src"
     const streamerId = process.env.STREAMER_ID
     const client = new SoopClient();
 
-    // 라이브 세부정보
-    // 로그인 (쿠키 반환)
-    // 아래와 같이 숲 ID, PASSWORD 문자열 입력 가능 (그대로 VCS 업로드 시 공개된 공간에 노출될 수 있음)
+    // Live details
+    // Login (returns cookie)
+    // You can directly enter SOOP ID and PASSWORD strings as shown below
+    // (if pushed to VCS as-is, they may be exposed in public repositories)
     // const cookie = await client.auth.signIn("USERID", "PASSWORD");
     const cookie  = await client.auth.signIn(process.env.USERID, process.env.PASSWORD);
     console.log(cookie)
 
-    // 라이브 세부정보 (로그인 후)
+    // Live details (after login)
     const liveDetailWithCookie = await client.live.detail(streamerId, cookie);
     console.log(liveDetailWithCookie);
 
-    // 라이브 세부정보
+    // Live details
     const liveDetailWithoutCookie = await client.live.detail(streamerId);
     console.log(liveDetailWithoutCookie);
 
-    // 채널 정보
+    // Channel information
     const stationInfo = await client.channel.station(streamerId);
     console.log(stationInfo)
 
     const soopChat = client.chat({
         streamerId: streamerId,
-        login: { userId: process.env.USERID, password: process.env.PASSWORD } // sendChat 기능을 사용하고 싶을 경우 세팅
+        login: { userId: process.env.USERID, password: process.env.PASSWORD } // required if you want to use sendChat
     })
 
-    // 연결 성공
+    // Connection successful
     soopChat.on(SoopChatEvent.CONNECT, response => {
         if(response.username) {
             console.log(`[${response.receivedTime}] ${response.username} is connected to ${response.streamerId}`)
@@ -38,13 +39,13 @@ import {SoopChatEvent, SoopClient} from "./src"
         console.log(`[${response.receivedTime}] SYN packet: ${response.syn}`)
     })
 
-    // 채팅방 입장
+    // Enter chat room
     soopChat.on(SoopChatEvent.ENTER_CHAT_ROOM, response => {
         console.log(`[${response.receivedTime}] Enter to ${response.streamerId}'s chat room`)
         console.log(`[${response.receivedTime}] SYN/ACK packet: ${response.synAck}`)
     })
 
-    // 채팅방 공지
+    // Chat room notice
     soopChat.on(SoopChatEvent.NOTIFICATION, response => {
         console.log('-'.repeat(50))
         console.log(`[${response.receivedTime}]`)
@@ -52,96 +53,96 @@ import {SoopChatEvent, SoopClient} from "./src"
         console.log('-'.repeat(50))
     })
 
-    // 일반 채팅
+    // Regular chat
     soopChat.on(SoopChatEvent.CHAT, response => {
         console.log(`[${response.receivedTime}] ${response.username}(${response.userId}): ${response.comment}`)
     })
 
-    // 이모티콘 채팅
+    // Emoticon chat
     soopChat.on(SoopChatEvent.EMOTICON, response => {
         console.log(`[${response.receivedTime}] ${response.username}(${response.userId}): ${response.emoticonId}`)
     })
 
-    // 텍스트/음성 후원 채팅
+    // Text/voice donation chat
     soopChat.on(SoopChatEvent.TEXT_DONATION, response => {
-        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from})님이 ${response.to}님에게 ${response.amount}개 후원`)
+        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from}) donated ${response.amount} to ${response.to}`)
         if (Number(response.fanClubOrdinal) !== 0) {
-            console.log(`[${response.receivedTime}] ${response.fanClubOrdinal}번째 팬클럽 가입을 환영합니다.\n`)
+            console.log(`[${response.receivedTime}] Welcome to fan club #${response.fanClubOrdinal}.\n`)
         } else {
-            console.log(`[${response.receivedTime}] 이미 팬클럽에 가입된 사용자입니다.\n`)
+            console.log(`[${response.receivedTime}] This user is already in the fan club.\n`)
         }
     })
 
-    // 영상 후원 채팅
+    // Video donation chat
     soopChat.on(SoopChatEvent.VIDEO_DONATION, response => {
-        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from})님이 ${response.to}님에게 ${response.amount}개 후원`)
+        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from}) donated ${response.amount} to ${response.to}`)
         if (Number(response.fanClubOrdinal) !== 0) {
-            console.log(`[${response.receivedTime}] ${response.fanClubOrdinal}번째 팬클럽 가입을 환영합니다.\n`)
+            console.log(`[${response.receivedTime}] Welcome to fan club #${response.fanClubOrdinal}.\n`)
         } else {
-            console.log(`[${response.receivedTime}] 이미 팬클럽에 가입된 사용자입니다.\n`)
+            console.log(`[${response.receivedTime}] This user is already in the fan club.\n`)
         }
     })
 
-    // 애드벌룬 후원 채팅
+    // Ad balloon donation chat
     soopChat.on(SoopChatEvent.AD_BALLOON_DONATION, response => {
-        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from})님이 ${response.to}님에게 ${response.amount}개 후원`)
+        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from}) donated ${response.amount} to ${response.to}`)
         if (Number(response.fanClubOrdinal) !== 0) {
-            console.log(`[${response.receivedTime}] ${response.fanClubOrdinal}번째 팬클럽 가입을 환영합니다.\n`)
+            console.log(`[${response.receivedTime}] Welcome to fan club #${response.fanClubOrdinal}.\n`)
         } else {
-            console.log(`[${response.receivedTime}] 이미 팬클럽에 가입된 사용자입니다.\n`)
+            console.log(`[${response.receivedTime}] This user is already in the fan club.\n`)
         }
     })
 
-    // 구독 채팅
+    // Subscription chat
     soopChat.on(SoopChatEvent.SUBSCRIBE, response => {
-        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from})님이 ${response.to}님을 구독하셨습니다.`)
-        console.log(`[${response.receivedTime}] ${response.monthCount}개월, ${response.tier}티어\n`)
+        console.log(`\n[${response.receivedTime}] ${response.fromUsername}(${response.from}) subscribed to ${response.to}.`)
+        console.log(`[${response.receivedTime}] ${response.monthCount} months, tier ${response.tier}\n`)
     })
 
-    // 퇴장 정보
+    // Exit info
     soopChat.on(SoopChatEvent.EXIT, response => {
-        console.log(`\n[${response.receivedTime}] ${response.username}(${response.userId})이/가 퇴장하셨습니다\n`)
+        console.log(`\n[${response.receivedTime}] ${response.username}(${response.userId}) has left.\n`)
     })
 
-    // 입장 정보
+    // Enter info
     soopChat.on(SoopChatEvent.VIEWER, response => {
         if(response.userId.length > 1) {
-            console.log(`[${response.receivedTime}] 수신한 채팅방 사용자는 ${response.userId.length}명 입니다.`)
+            console.log(`[${response.receivedTime}] Received ${response.userId.length} users in the chat room.`)
         } else {
-            console.log(`[${response.receivedTime}] ${response.userId[0]}이/가 입장하셨습니다`)
+            console.log(`[${response.receivedTime}] ${response.userId[0]} has entered.`)
         }
     })
 
-    // 방송 종료
+    // Stream ended
     soopChat.on(SoopChatEvent.DISCONNECT, response => {
-        console.log(`[${response.receivedTime}] ${response.streamerId}의 방송이 종료됨`)
+        console.log(`[${response.receivedTime}] ${response.streamerId}'s stream has ended`)
     })
 
-    // 특정하지 못한 패킷
+    // Unidentified packet
     soopChat.on(SoopChatEvent.UNKNOWN, packet => {
         console.log(packet)
     })
 
-    // 패킷을 바이너리 형태로 확인
+    // Inspect packets in binary form
     soopChat.on(SoopChatEvent.RAW, packet => {
         console.log(packet)
     })
 
-    // 본인이 송신한 채팅
+    // Chat sent by yourself
     soopChat.on(SoopChatEvent.CHAT, response => {
         if( response.userId.includes(process.env.USERID) ) {
             console.log(`[${response.receivedTime}] ${response.username}(${response.userId}): ${response.comment}`)
         }
     })
 
-    // 채팅 연결
+    // Connect to chat
     await soopChat.connect()
 
-    // 채팅 송신
-    // 바로 채팅 송신 시 채팅방 연결까지 대기 후 송신
-    // 연속으로 채팅 송신 시 벤 및 송신 실패할 수 있으므로 송신 전 대기 시간 설정 필요
-    await soopChat.sendChat("ㅎㅇ");
+    // Send chat
+    // If sent immediately, it waits until the chat room connection is established
+    // If sending repeatedly, set a delay before sending to avoid bans or failed sends
+    await soopChat.sendChat("hi");
     setInterval(async () => {
-        await soopChat.sendChat("신기하다");
+        await soopChat.sendChat("This is interesting");
     }, 5000)
 })();
